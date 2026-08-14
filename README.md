@@ -3,8 +3,6 @@
 ## 📌 Descripción del Proyecto
 `control-gastos` es una aplicación web diseñada para la gestión y seguimiento eficiente de gastos personales o empresariales.
 
-En esta **Fase 1**, el objetivo exclusivo es establecer e inicializar la estructura base del proyecto, workspace con pnpm, configuración del frontend y backend, y definir el flujo de trabajo en Git.
-
 ---
 
 ## 🚀 Tecnologías Utilizadas
@@ -12,6 +10,7 @@ En esta **Fase 1**, el objetivo exclusivo es establecer e inicializar la estruct
 ### Frontend
 - **Angular** (TypeScript, HTML, CSS)
 - **Angular Router**
+- **HttpClient**
 
 ### Backend
 - **Node.js**
@@ -86,24 +85,34 @@ Para verificar que el backend funciona correctamente:
 3. Respuesta esperada:
    ```json
    {
+     "success": true,
      "message": "API funcionando correctamente"
    }
    ```
 
 ---
 
-## 📁 Estructura Inicial del Proyecto
+## 📁 Estructura del Proyecto
 
 ```text
 control-gastos/
-├── frontend/             # Aplicación Angular
+├── frontend/             # Aplicación Angular (Fase 2)
 │   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/     # Guards, Interceptors, Services, Models
+│   │   │   ├── features/ # Home, Dashboard, Auth, Admin
+│   │   │   └── shared/   # Components, Models
+│   │   └── environments/
 │   ├── package.json
 │   └── tsconfig.json
-├── backend/              # Aplicación Node.js + Express + TypeScript
+├── backend/              # Aplicación Node.js + Express + TypeScript (Fase 3)
 │   ├── src/
+│   │   ├── config/       # Lectura de variables de entorno (env.ts)
+│   │   ├── middlewares/  # Manejo centralizado de errores (error.middleware.ts)
+│   │   ├── modules/      # Módulos auth y users preparados
+│   │   ├── routes/       # Rutas centralizadas (/api/health)
 │   │   ├── app.ts        # Instancia y middlewares de Express
-│   │   └── server.ts     # Entrada del servidor HTTP (listen)
+│   │   └── server.ts     # Inicialización del servidor HTTP (listen)
 │   ├── package.json
 │   └── tsconfig.json
 ├── .env.example          # Plantilla de variables de entorno
