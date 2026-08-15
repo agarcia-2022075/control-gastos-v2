@@ -27,20 +27,20 @@ export class AdminComponent implements OnInit {
   loadAdminData(): void {
     this.loading = true;
     this.errorMessage = '';
-    
+
+    if (this.authService.currentUserData) {
+      this.currentUser = this.authService.currentUserData;
+    }
+
     this.authService.getCurrentUser().subscribe({
       next: (res) => {
-        if (res && res.success) {
+        if (res && res.data) {
           this.currentUser = res.data;
-          this.fetchUsers();
-        } else {
-          this.loading = false;
-          this.errorMessage = 'No se pudieron verificar los permisos del usuario.';
         }
+        this.fetchUsers();
       },
-      error: (err) => {
-        this.loading = false;
-        this.errorMessage = err.error?.message || 'No tienes permisos para acceder a esta sección.';
+      error: () => {
+        this.fetchUsers();
       }
     });
   }
