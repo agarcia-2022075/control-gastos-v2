@@ -2,17 +2,40 @@
   <div class="card">
     <div class="header">
       <h1>Dashboard</h1>
-      <span class="badge warning">Provisional</span>
-    </div>
-    
-    <p class="description">Página de prueba del sistema.</p>
-    
-    <div class="info-box">
-      <p>La autenticación y protección JWT se implementarán posteriormente.</p>
+      <span *ngIf="currentUser" class="badge" [class.admin]="currentUser.role === 'ADMIN'" [class.user]="currentUser.role === 'USER'">
+        {{ currentUser.role }}
+      </span>
     </div>
 
-    <div class="actions">
-      <a routerLink="/" class="btn btn-secondary">Volver al Inicio</a>
+    <div *ngIf="loading" class="loading-state">
+      <p>Cargando información del usuario...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="!loading && currentUser" class="user-profile">
+      <h2>Bienvenido, {{ currentUser.name }}</h2>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">ID de Usuario:</span>
+          <span class="value">{{ currentUser.id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Correo Electrónico:</span>
+          <span class="value">{{ currentUser.email }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Rol Asignado:</span>
+          <span class="value font-bold">{{ currentUser.role }}</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button (click)="logout()" class="btn btn-danger">Cerrar Sesión</button>
+      </div>
     </div>
   </div>
 </div>

@@ -1,5 +1,5 @@
 import { pool } from '../../../config/database.js';
-import { User, UserResponse } from '../models/user.model.js';
+import { User, UserResponse, UserRole } from '../models/user.model.js';
 
 export class UserRepository {
   async findAll(): Promise<UserResponse[]> {
@@ -49,6 +49,23 @@ export class UserRepository {
     `;
     const result = await pool.query<UserResponse>(query, [id]);
     return result.rows[0] || null;
+  }
+
+  async create(data: { name: string; email: string; passwordHash: string; role?: UserRole }): Promise<UserResponse> {
+    const role = data.role || 'USER';
+    const query = `
+      INSERT INTO users (name, email, password, role)
+      VALUES ($1, $2, $3, $4)
+      RETURNING 
+        id, 
+        name, 
+        email, 
+        role, 
+        created_at AS "createdAt", 
+        updated_at AS "updatedAt"
+    `;
+    const result = await pool.query<UserResponse>(query, [data.name, data.email, data.passwordHash, role]);
+    return result.rows[0];
   }
 }
 

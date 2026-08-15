@@ -21,7 +21,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 h1 {
@@ -38,29 +38,55 @@ h1 {
   border-radius: 9999px;
 }
 
-.badge.warning {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
+.badge.admin {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.15);
 }
 
-.description {
-  color: #e5e7eb;
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
+.badge.user {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
 }
 
-.info-box {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  color: #a5b4fc;
-  font-size: 0.95rem;
+.user-profile h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 1.25rem;
+}
+
+.info-grid {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
   margin-bottom: 2rem;
 }
 
-.info-box p {
-  margin: 0;
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.value {
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.font-bold {
+  font-weight: 700;
 }
 
 .actions {
@@ -69,19 +95,38 @@ h1 {
 }
 
 .btn {
-  display: inline-block;
-  padding: 0.6rem 1.2rem;
+  padding: 0.65rem 1.3rem;
   border-radius: 8px;
-  font-weight: 600;
-  text-decoration: none;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
+.btn-danger {
+  background: #ef4444;
   color: #ffffff;
 }
 
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.loading-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem 0;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
 }

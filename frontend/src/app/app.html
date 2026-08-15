@@ -7,7 +7,14 @@
       </a>
       <nav class="nav-links">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
-        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <ng-container *ngIf="!authService.isLoggedIn()">
+          <a routerLink="/login" routerLinkActive="active">Iniciar Sesión</a>
+          <a routerLink="/register" routerLinkActive="active">Registro</a>
+        </ng-container>
+        <ng-container *ngIf="authService.isLoggedIn()">
+          <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <button (click)="authService.logout()" class="nav-btn-logout">Salir</button>
+        </ng-container>
       </nav>
     </div>
   </header>
@@ -17,6 +24,6 @@
   </main>
 
   <footer class="app-footer">
-    <p>&copy; 2026 control-gastos. Fase 2 — Arquitectura Base Frontend</p>
+    <p>&copy; 2026 control-gastos. Fase 5 — Autenticación con JWT</p>
   </footer>
 </div>
