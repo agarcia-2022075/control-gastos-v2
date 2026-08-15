@@ -1,27 +1,28 @@
 <div class="auth-container">
   <div class="card">
     <div class="header">
-      <h1>Iniciar Sesión</h1>
-      <p>Accede a tu cuenta de Control de Gastos</p>
+      <span class="app-title">CONTROL DE GASTOS</span>
+      <h1>Iniciar sesión</h1>
     </div>
 
-    <div *ngIf="errorMessage" class="alert alert-error">
+    <div *ngIf="errorMessage" class="alert alert-error" role="alert">
       {{ errorMessage }}
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" aria-label="Formulario de inicio de sesión">
       <div class="form-group">
-        <label for="email">Correo Electrónico</label>
+        <label for="email">Correo electrónico</label>
         <input 
           id="email" 
           type="email" 
           formControlName="email" 
-          placeholder="correo@ejemplo.com"
+          placeholder="usuario@ejemplo.com"
+          autocomplete="email"
           [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
         />
         <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-text">
-          <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo es obligatorio.</span>
-          <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un correo válido.</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo electrónico es obligatorio.</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingresa un correo electrónico válido.</span>
         </div>
       </div>
 
@@ -32,6 +33,7 @@
           type="password" 
           formControlName="password" 
           placeholder="••••••••"
+          autocomplete="current-password"
           [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
         />
         <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-text">
@@ -40,12 +42,12 @@
       </div>
 
       <button type="submit" class="btn btn-primary" [disabled]="loading">
-        {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+        {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
       </button>
     </form>
 
     <div class="footer">
-      <p>¿No tienes cuenta? <a routerLink="/register">Regístrate aquí</a></p>
+      <p>¿No tienes una cuenta? <a routerLink="/register">Crear cuenta</a></p>
     </div>
   </div>
 </div>

@@ -1,26 +1,27 @@
 <div class="auth-container">
   <div class="card">
     <div class="header">
-      <h1>Crear Cuenta</h1>
-      <p>Regístrate para comenzar a gestionar tus gastos</p>
+      <span class="app-title">CONTROL DE GASTOS</span>
+      <h1>Crear cuenta</h1>
     </div>
 
-    <div *ngIf="errorMessage" class="alert alert-error">
+    <div *ngIf="errorMessage" class="alert alert-error" role="alert">
       {{ errorMessage }}
     </div>
 
-    <div *ngIf="successMessage" class="alert alert-success">
+    <div *ngIf="successMessage" class="alert alert-success" role="status">
       {{ successMessage }}
     </div>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" aria-label="Formulario de registro">
       <div class="form-group">
-        <label for="name">Nombre Completo</label>
+        <label for="name">Nombre</label>
         <input 
           id="name" 
           type="text" 
           formControlName="name" 
           placeholder="Juan Pérez"
+          autocomplete="name"
           [class.invalid]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched"
         />
         <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-text">
@@ -29,17 +30,18 @@
       </div>
 
       <div class="form-group">
-        <label for="email">Correo Electrónico</label>
+        <label for="email">Correo electrónico</label>
         <input 
           id="email" 
           type="email" 
           formControlName="email" 
           placeholder="juan@ejemplo.com"
+          autocomplete="email"
           [class.invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
         />
         <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-text">
-          <span *ngIf="registerForm.get('email')?.errors?.['required']">El correo es obligatorio.</span>
-          <span *ngIf="registerForm.get('email')?.errors?.['email']">Ingrese un correo válido.</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">El correo electrónico es obligatorio.</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['email']">Ingresa un correo electrónico válido.</span>
         </div>
       </div>
 
@@ -50,21 +52,23 @@
           type="password" 
           formControlName="password" 
           placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password"
           [class.invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
         />
         <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-text">
           <span *ngIf="registerForm.get('password')?.errors?.['required']">La contraseña es obligatoria.</span>
-          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">Debe tener al menos 6 caracteres.</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres.</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label for="confirmPassword">Confirmar Contraseña</label>
+        <label for="confirmPassword">Confirmar contraseña</label>
         <input 
           id="confirmPassword" 
           type="password" 
           formControlName="confirmPassword" 
           placeholder="Repite tu contraseña"
+          autocomplete="new-password"
           [class.invalid]="(registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch']) || (registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched)"
         />
         <div *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch']" class="error-text">
@@ -78,7 +82,7 @@
     </form>
 
     <div class="footer">
-      <p>¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></p>
+      <p>¿Ya tienes una cuenta? <a routerLink="/login">Iniciar sesión</a></p>
     </div>
   </div>
 </div>

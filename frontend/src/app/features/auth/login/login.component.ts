@@ -47,7 +47,11 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Error al iniciar sesión. Inténtelo de nuevo.';
+        if (err.status === 401) {
+          this.errorMessage = 'Correo o contraseña incorrectos.';
+        } else {
+          this.errorMessage = err.error?.message || 'Error al iniciar sesión. Inténtelo de nuevo.';
+        }
       }
     });
   }

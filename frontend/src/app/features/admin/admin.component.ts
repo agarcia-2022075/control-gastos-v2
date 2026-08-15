@@ -37,7 +37,7 @@ export class AdminComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'No se pudo verificar la información del administrador.';
+        this.errorMessage = err.error?.message || 'No tienes permisos para acceder a esta sección.';
       }
     });
   }
@@ -52,7 +52,7 @@ export class AdminComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Error al obtener la lista de usuarios.';
+        this.errorMessage = err.error?.message || 'Error al obtener la lista de usuarios del sistema.';
       }
     });
   }
@@ -66,13 +66,14 @@ export class AdminComponent implements OnInit {
     this.authService.updateUserRole(user.id, newRole).subscribe({
       next: (res) => {
         if (res.success) {
-          user.role = newRole;
-          this.successMessage = `Rol del usuario ${user.email} actualizado a ${newRole}.`;
-          setTimeout(() => this.successMessage = '', 3000);
+          this.successMessage = `Rol del usuario ${user.email} actualizado correctamente a ${newRole}.`;
+          this.fetchUsers();
+          setTimeout(() => this.successMessage = '', 4000);
         }
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'No se pudo cambiar el rol del usuario.';
+        this.fetchUsers();
         setTimeout(() => this.errorMessage = '', 4000);
       }
     });

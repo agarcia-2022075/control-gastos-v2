@@ -18,10 +18,16 @@
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 1.5rem;
+}
+
+.app-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #6366f1;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
 }
 
 h1 {
@@ -29,23 +35,6 @@ h1 {
   font-weight: 800;
   color: #ffffff;
   margin: 0;
-}
-
-.badge {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 9999px;
-}
-
-.badge.admin {
-  color: #f43f5e;
-  background: rgba(244, 63, 94, 0.15);
-}
-
-.badge.user {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.15);
 }
 
 .user-profile h2 {
@@ -66,7 +55,8 @@ h1 {
 .info-item {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0;
+  align-items: center;
+  padding: 0.65rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -85,8 +75,19 @@ h1 {
   font-size: 0.95rem;
 }
 
-.font-bold {
-  font-weight: 700;
+.admin-text {
+  color: #f43f5e;
+  font-weight: 800;
+}
+
+.user-text {
+  color: #10b981;
+  font-weight: 800;
+}
+
+.status-online {
+  color: #34d399;
+  font-size: 0.85rem;
 }
 
 .actions {
