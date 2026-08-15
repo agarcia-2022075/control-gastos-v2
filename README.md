@@ -16,6 +16,7 @@
 - **Node.js**
 - **Express**
 - **TypeScript**
+- **PostgreSQL** (Driver nativo `pg`)
 
 ### Gestor de Paquetes
 - **pnpm** (pnpm workspace)
@@ -27,16 +28,7 @@
 ### Requisitos
 - **Node.js** (v18.0.0 o superior)
 - **pnpm** (v8.0.0 o superior)
-
-### Instalación de pnpm
-Si no tienes `pnpm` instalado, puedes instalarlo globalmente ejecutando:
-
-```bash
-npm install -g pnpm
-# O utilizando Corepack:
-corepack enable
-corepack prepare pnpm@latest --activate
-```
+- **PostgreSQL** (v12.0 o superior)
 
 ### Instalación de Dependencias del Proyecto
 Desde la raíz del proyecto, ejecuta:
@@ -44,6 +36,55 @@ Desde la raíz del proyecto, ejecuta:
 ```bash
 pnpm install
 ```
+
+---
+
+## 🗄️ Configuración Manual de PostgreSQL
+
+1. Abre **pgAdmin**, **DBeaver** o la consola **psql** de PostgreSQL.
+2. Ejecuta el comando SQL para crear la base de datos:
+
+   ```sql
+   CREATE DATABASE control_gastos;
+   ```
+
+3. Conéctate a la base de datos `control_gastos` y ejecuta el script SQL para crear la tabla `users`:
+
+   ```sql
+   CREATE TABLE users (
+     id SERIAL PRIMARY KEY,
+     name VARCHAR(255) NOT NULL,
+     email VARCHAR(255) NOT NULL UNIQUE,
+     password VARCHAR(255) NOT NULL,
+     role VARCHAR(20) NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN')),
+     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+   );
+   ```
+
+4. Configura tus credenciales en el archivo `.env` local (basándote en `.env.example`):
+
+   ```env
+   PORT=3000
+
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=control_gastos
+   DB_USER=postgres
+   DB_PASSWORD=admin
+
+   ADMIN_EMAIL=admin@controlgastos.com
+   ADMIN_PASSWORD=admin123
+
+   JWT_SECRET=super_secret_jwt_key
+   JWT_EXPIRES_IN=1h
+   ```
+
+5. Poblar el usuario administrador inicial (hasheado con bcryptjs):
+
+   ```bash
+   pnpm run db:seed
+   ```
 
 ---
 
@@ -72,23 +113,28 @@ El proyecto utiliza **pnpm workspaces** para gestionar el frontend y el backend 
 
 ---
 
-## 🌐 Comprobación del Backend
+## 🌐 Endpoints Disponibles
 
-Para verificar que el backend funciona correctamente:
-
-1. Inicia el servidor backend:
-   ```bash
-   pnpm run dev:backend
-   ```
-2. Realiza una petición `GET` a la ruta de salud de la API:
-   - URL: `http://localhost:3000/api/health`
-3. Respuesta esperada:
-   ```json
-   {
-     "success": true,
-     "message": "API funcionando correctamente"
-   }
-   ```
+- **`GET /api/health`**: Verificación de estado de la API.
+  ```json
+  {
+    "success": true,
+    "message": "API funcionando correctamente"
+  }
+  ```
+- **`GET /api/users`**: Listado de usuarios de la BD (sin contraseñas).
+  ```json
+  [
+    {
+      "id": 1,
+      "name": "Administrator",
+      "email": "admin@controlgastos.com",
+      "role": "ADMIN",
+      "createdAt": "2026-08-15T00:25:52.307Z",
+      "updatedAt": "2026-08-15T00:25:52.307Z"
+    }
+  ]
+  ```
 
 ---
 
@@ -97,48 +143,15 @@ Para verificar que el backend funciona correctamente:
 ```text
 control-gastos/
 ├── frontend/             # Aplicación Angular (Fase 2)
+├── backend/              # Aplicación Node.js + Express + TypeScript + PostgreSQL (Fase 3 & 4)
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── core/     # Guards, Interceptors, Services, Models
-│   │   │   ├── features/ # Home, Dashboard, Auth, Admin
-│   │   │   └── shared/   # Components, Models
-│   │   └── environments/
-│   ├── package.json
-│   └── tsconfig.json
-├── backend/              # Aplicación Node.js + Express + TypeScript (Fase 3)
-│   ├── src/
-│   │   ├── config/       # Lectura de variables de entorno (env.ts)
-│   │   ├── middlewares/  # Manejo centralizado de errores (error.middleware.ts)
-│   │   ├── modules/      # Módulos auth y users preparados
-│   │   ├── routes/       # Rutas centralizadas (/api/health)
-│   │   ├── app.ts        # Instancia y middlewares de Express
-│   │   └── server.ts     # Inicialización del servidor HTTP (listen)
-│   ├── package.json
-│   └── tsconfig.json
-├── .env.example          # Plantilla de variables de entorno
-├── .gitignore            # Exclusiones para el control de versiones
-├── package.json          # Workspace raíz
-├── pnpm-workspace.yaml   # Configuración de workspace pnpm
-├── pnpm-lock.yaml        # Reproducibilidad de dependencias
+│   │   ├── config/       # Lectura de env.ts y pool de PostgreSQL (database.ts)
+│   │   ├── middlewares/  # Manejo de errores (error.middleware.ts)
+│   │   ├── modules/      # Módulo users (model, repository, service, controller, routes)
+│   │   ├── routes/       # Rutas centralizadas (/api/health, /api/users)
+│   │   ├── app.ts        # Express App
+│   │   └── server.ts     # HTTP Listen y check de conexión DB
+├── .env.example          # Plantilla de entorno
+├── .gitignore            # Exclusiones de Git (.env, node_modules, dist)
 └── README.md             # Documentación del proyecto
 ```
-
----
-
-## 🌿 Flujo de Ramas Git
-
-El repositorio utiliza una estrategia de tres ramas principales:
-
-```text
-main
-  │
-  └── develop
-        │
-        └── agarcia-2022075
-```
-
-- **`main`**: Rama principal de producción. Debe mantenerse limpia sin código directo de desarrollo.
-- **`develop`**: Rama de integración del proyecto.
-- **`agarcia-2022075`**: Rama de trabajo personal donde se realizan los desarrollos de cada fase.
-
-Los cambios se integran hacia `develop` mediante Pull Requests.
