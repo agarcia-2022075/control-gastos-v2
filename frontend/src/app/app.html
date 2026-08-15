@@ -1,12 +1,12 @@
 <div class="app-layout">
   <header class="app-header">
     <div class="header-container">
-      <a routerLink="/" class="brand">
+      <a routerLink="/dashboard" class="brand">
         <span class="brand-icon">💰</span>
         <span class="brand-name">control-gastos</span>
       </a>
       <nav class="nav-links">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+
         <ng-container *ngIf="!authService.isLoggedIn()">
           <a routerLink="/login" routerLinkActive="active">Iniciar Sesión</a>
           <a routerLink="/register" routerLinkActive="active">Registro</a>
