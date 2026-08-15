@@ -3,7 +3,7 @@
   flex-direction: column;
   min-height: 100vh;
   position: relative;
-  background-color: #060913;
+  background-color: #050711;
 }
 
 /* Background Abstract Orbs & Volumetric Light Glows */
@@ -21,44 +21,44 @@
 .bg-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.55;
+  filter: blur(85px);
+  opacity: 0.7;
   animation: floatOrb 20s ease-in-out infinite alternate;
 }
 
 .orb-cyan {
-  width: 500px;
-  height: 500px;
-  top: -100px;
-  left: -100px;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.6) 0%, rgba(56, 189, 248, 0.3) 60%, transparent 100%);
+  width: 550px;
+  height: 550px;
+  top: -120px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.7) 0%, rgba(56, 189, 248, 0.4) 60%, transparent 100%);
   animation-duration: 18s;
 }
 
 .orb-purple {
-  width: 550px;
-  height: 550px;
-  top: 10%;
-  right: -150px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.55) 0%, rgba(124, 58, 237, 0.25) 65%, transparent 100%);
+  width: 600px;
+  height: 600px;
+  top: 5%;
+  right: -120px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.65) 0%, rgba(124, 58, 237, 0.3) 65%, transparent 100%);
   animation-duration: 22s;
 }
 
 .orb-blue {
-  width: 600px;
-  height: 600px;
-  bottom: -150px;
-  left: 15%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(30, 27, 75, 0.2) 70%, transparent 100%);
+  width: 650px;
+  height: 650px;
+  bottom: -180px;
+  left: 10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.55) 0%, rgba(30, 27, 75, 0.25) 70%, transparent 100%);
   animation-duration: 25s;
 }
 
 .orb-magenta {
-  width: 450px;
-  height: 450px;
-  bottom: 20%;
-  right: 15%;
-  background: radial-gradient(circle, rgba(192, 132, 252, 0.35) 0%, rgba(76, 29, 149, 0.15) 60%, transparent 100%);
+  width: 500px;
+  height: 500px;
+  bottom: 15%;
+  right: 12%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.45) 0%, rgba(76, 29, 149, 0.2) 60%, transparent 100%);
   animation-duration: 16s;
 }
 
@@ -67,25 +67,25 @@
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(40px, -30px) scale(1.08);
+    transform: translate(45px, -35px) scale(1.1);
   }
   100% {
-    transform: translate(-30px, 40px) scale(0.95);
+    transform: translate(-35px, 45px) scale(0.92);
   }
 }
 
-/* Glass Header & Navbar */
+/* Glass Header & Navbar - Ultra Liquid Water Translucency */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10, 15, 30, 0.55);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0.005) 100%);
+  backdrop-filter: blur(35px) saturate(220%) contrast(105%);
+  -webkit-backdrop-filter: blur(35px) saturate(220%) contrast(105%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 15px 35px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 .header-container {
