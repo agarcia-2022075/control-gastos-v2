@@ -30,9 +30,12 @@ export class AdminComponent implements OnInit {
     
     this.authService.getCurrentUser().subscribe({
       next: (res) => {
-        if (res.success) {
+        if (res && res.success) {
           this.currentUser = res.data;
           this.fetchUsers();
+        } else {
+          this.loading = false;
+          this.errorMessage = 'No se pudieron verificar los permisos del usuario.';
         }
       },
       error: (err) => {
@@ -46,8 +49,10 @@ export class AdminComponent implements OnInit {
     this.authService.getUsers().subscribe({
       next: (res) => {
         this.loading = false;
-        if (res.success && res.data) {
+        if (res && res.success && res.data) {
           this.users = res.data;
+        } else if (Array.isArray(res)) {
+          this.users = res;
         }
       },
       error: (err) => {
@@ -65,7 +70,7 @@ export class AdminComponent implements OnInit {
 
     this.authService.updateUserRole(user.id, newRole).subscribe({
       next: (res) => {
-        if (res.success) {
+        if (res && res.success) {
           this.successMessage = `Rol del usuario ${user.email} actualizado correctamente a ${newRole}.`;
           this.fetchUsers();
           setTimeout(() => this.successMessage = '', 4000);

@@ -20,7 +20,7 @@
       {{ successMessage }}
     </div>
 
-    <div *ngIf="!loading && users.length > 0" class="content">
+    <div *ngIf="!loading && !errorMessage" class="content">
       <div class="stats-bar">
         <div class="stat-card">
           <span class="stat-label">Usuarios Registrados</span>
@@ -29,7 +29,7 @@
       </div>
 
       <h2>Gestión de Usuarios</h2>
-      <div class="table-responsive">
+      <div class="table-responsive" *ngIf="users.length > 0; else emptyUsers">
         <table class="users-table">
           <thead>
             <tr>
@@ -64,6 +64,12 @@
           </tbody>
         </table>
       </div>
+
+      <ng-template #emptyUsers>
+        <div class="loading-state">
+          <p>No se encontraron usuarios registrados.</p>
+        </div>
+      </ng-template>
     </div>
   </div>
 </div>
