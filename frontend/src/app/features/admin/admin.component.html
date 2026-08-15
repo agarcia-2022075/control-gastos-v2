@@ -1,7 +1,8 @@
 <div class="admin-container">
-  <div class="card">
+  <div class="card glass-card">
     <div class="header">
       <div>
+        <span class="admin-badge-subtitle">GESTIÓN GENERAL SISTEMA</span>
         <h1>Panel de Administración</h1>
         <p *ngIf="currentUser">Bienvenido, <strong>{{ currentUser.name }}</strong> (Rol actual: <span class="badge admin">ADMIN</span>)</p>
       </div>
@@ -9,6 +10,7 @@
     </div>
 
     <div *ngIf="loading" class="loading-state">
+      <div class="glass-spinner"></div>
       <p>Cargando información administrativa...</p>
     </div>
 
@@ -23,8 +25,13 @@
     <div *ngIf="!loading && !errorMessage" class="content">
       <div class="stats-bar">
         <div class="stat-card">
-          <span class="stat-label">Usuarios Registrados</span>
-          <span class="stat-value">{{ users.length }}</span>
+          <div class="stat-icon-wrapper">
+            <span>👥</span>
+          </div>
+          <div>
+            <span class="stat-label">Usuarios Registrados</span>
+            <span class="stat-value">{{ users.length }}</span>
+          </div>
         </div>
       </div>
 
@@ -42,9 +49,9 @@
           </thead>
           <tbody>
             <tr *ngFor="let u of users">
-              <td>#{{ u.id }}</td>
-              <td>{{ u.name }}</td>
-              <td>{{ u.email }}</td>
+              <td class="user-id">#{{ u.id }}</td>
+              <td class="user-name">{{ u.name }}</td>
+              <td class="user-email">{{ u.email }}</td>
               <td>
                 <span class="badge" [class.admin]="u.role === 'ADMIN'" [class.user]="u.role === 'USER'">
                   {{ u.role }}

@@ -1,20 +1,29 @@
 <div class="app-layout">
+  <!-- Background Abstract Glowing Orbs for Glassmorphism -->
+  <div class="bg-orbs-container" aria-hidden="true">
+    <div class="bg-orb orb-cyan"></div>
+    <div class="bg-orb orb-purple"></div>
+    <div class="bg-orb orb-blue"></div>
+    <div class="bg-orb orb-magenta"></div>
+  </div>
+
   <header class="app-header">
     <div class="header-container">
       <a routerLink="/dashboard" class="brand">
-        <span class="brand-icon">💰</span>
-        <span class="brand-name">control-gastos</span>
+        <div class="brand-icon-wrapper">
+          <span class="brand-icon">💰</span>
+        </div>
+        <span class="brand-name">control<span class="brand-accent">-gastos</span></span>
       </a>
       <nav class="nav-links">
-
         <ng-container *ngIf="!authService.isLoggedIn()">
           <a routerLink="/login" routerLinkActive="active">Iniciar Sesión</a>
-          <a routerLink="/register" routerLinkActive="active">Registro</a>
+          <a routerLink="/register" routerLinkActive="active" class="btn-nav-accent">Registro</a>
         </ng-container>
         <ng-container *ngIf="authService.isLoggedIn()">
           <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
           <a *ngIf="authService.isAdmin()" routerLink="/admin" routerLinkActive="active">Administración</a>
-          <button (click)="authService.logout()" class="nav-btn-logout">Salir</button>
+          <button (click)="authService.logout()" class="nav-btn-logout">Cerrar Sesión</button>
         </ng-container>
       </nav>
     </div>

@@ -1,11 +1,12 @@
 <div class="dashboard-container">
-  <div class="card">
+  <div class="card glass-card">
     <div class="header">
-      <span class="app-title">CONTROL DE GASTOS</span>
+      <span class="app-title">PANEL GENERAL DE CONTROL DE GASTOS</span>
       <h1>Dashboard</h1>
     </div>
 
     <div *ngIf="loading" class="loading-state">
+      <div class="glass-spinner"></div>
       <p>Cargando información del usuario...</p>
     </div>
 
@@ -14,27 +15,38 @@
     </div>
 
     <div *ngIf="!loading && currentUser" class="user-profile">
-      <h2>Bienvenido, {{ currentUser.name }}</h2>
+      <div class="user-avatar-header">
+        <div class="avatar-ring">
+          <span class="avatar-initial">{{ currentUser.name.charAt(0).toUpperCase() }}</span>
+        </div>
+        <div>
+          <h2>Bienvenido, <span class="user-name-highlight">{{ currentUser.name }}</span></h2>
+          <span class="user-email-subtitle">{{ currentUser.email }}</span>
+        </div>
+      </div>
       
       <div class="info-grid">
         <div class="info-item">
-          <span class="label">Correo:</span>
+          <span class="label">Correo Electrónico:</span>
           <span class="value">{{ currentUser.email }}</span>
         </div>
         <div class="info-item">
-          <span class="label">Rol:</span>
-          <span class="value font-bold" [class.admin-text]="currentUser.role === 'ADMIN'" [class.user-text]="currentUser.role === 'USER'">
+          <span class="label">Rol de Usuario:</span>
+          <span class="role-badge" [class.badge-admin]="currentUser.role === 'ADMIN'" [class.badge-user]="currentUser.role === 'USER'">
             {{ currentUser.role }}
           </span>
         </div>
         <div class="info-item">
-          <span class="label">Estado:</span>
-          <span class="value status-online">Sesión autenticada correctamente</span>
+          <span class="label">Estado de la Cuenta:</span>
+          <span class="status-online">
+            <span class="status-dot"></span>
+            Sesión activa y autenticada
+          </span>
         </div>
       </div>
 
       <div class="actions">
-        <button (click)="logout()" class="btn btn-danger">Cerrar sesión</button>
+        <button (click)="logout()" class="btn btn-danger">Cerrar Sesión</button>
       </div>
     </div>
   </div>
