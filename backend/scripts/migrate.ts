@@ -47,8 +47,18 @@ async function runMigrations() {
 
   try {
     await dbClient.connect();
-    const migrationsDir = path.resolve(process.cwd(), 'migrations');
+    
+    let migrationsDir = path.resolve(process.cwd(), 'backend/migrations');
+    if (!fs.existsSync(migrationsDir)) {
+      migrationsDir = path.resolve(process.cwd(), 'migrations');
+    }
+
+    if (!fs.existsSync(migrationsDir)) {
+      throw new Error(`No se encontró la carpeta de migraciones en: ${migrationsDir}`);
+    }
+
     const files = fs.readdirSync(migrationsDir).sort();
+    console.log(`Directorio de migraciones: ${migrationsDir}`);
 
     for (const file of files) {
       if (file.endsWith('.sql')) {
