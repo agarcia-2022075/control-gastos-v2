@@ -1,6 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { AuthService, UserResponse } from '../../core/services/auth.service';
 
 @Component({
@@ -12,6 +11,8 @@ import { AuthService, UserResponse } from '../../core/services/auth.service';
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+
   currentUser: UserResponse | null = null;
   loading: boolean = true;
   errorMessage: string = '';
@@ -23,10 +24,12 @@ export class DashboardComponent implements OnInit {
         if (res.success && res.data) {
           this.currentUser = res.data;
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.message || 'Error cargando datos del usuario.';
+        this.cdr.detectChanges();
       }
     });
   }

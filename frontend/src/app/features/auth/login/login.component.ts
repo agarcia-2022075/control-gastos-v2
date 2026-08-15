@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -15,6 +15,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   errorMessage: string = '';
   loading: boolean = false;
@@ -32,6 +33,7 @@ export class LoginComponent {
 
     this.loading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
     const credentials = {
       email: this.loginForm.value.email!,
@@ -41,6 +43,7 @@ export class LoginComponent {
     this.authService.login(credentials).subscribe({
       next: (res) => {
         this.loading = false;
+        this.cdr.detectChanges();
         if (res.success) {
           this.router.navigate(['/dashboard']);
         }
@@ -52,7 +55,9 @@ export class LoginComponent {
         } else {
           this.errorMessage = err.error?.message || 'Error al iniciar sesión. Inténtelo de nuevo.';
         }
+        this.cdr.detectChanges();
       }
     });
   }
 }
+
