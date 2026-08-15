@@ -24,26 +24,44 @@ export interface AuthResponse {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.apiUrl}/auth`;
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'auth_token';
 
+  currentUserData: UserResponse | null = null;
+
   register(data: { name: string; email: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, data);
+    return this.http.post(`${this.apiUrl}/auth/register`, data);
   }
 
   login(credentials: { email: string; password: string }): Observable<{ success: boolean; message: string; data: AuthResponse }> {
-    return this.http.post<{ success: boolean; message: string; data: AuthResponse }>(`${this.apiUrl}/login`, credentials)
+    return this.http.post<{ success: boolean; message: string; data: AuthResponse }>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap(res => {
           if (res.success && res.data?.token) {
             this.saveToken(res.data.token);
+            this.currentUserData = res.data.user;
           }
         })
       );
   }
 
   getCurrentUser(): Observable<{ success: boolean; data: UserResponse }> {
-    return this.http.get<{ success: boolean; data: UserResponse }>(`${this.apiUrl}/me`);
+    return this.http.get<{ success: boolean; data: UserResponse }>(`${this.apiUrl}/auth/me`)
+      .pipe(
+        tap(res => {
+          if (res.success && res.data) {
+            this.currentUserData = res.data;
+          }
+        })
+      );
+  }
+
+  getUsers(): Observable<{ success: boolean; data: UserResponse[] }> {
+    return this.http.get<{ success: boolean; data: UserResponse[] }>(`${this.apiUrl}/users`);
+  }
+
+  updateUserRole(userId: number, role: 'USER' | 'ADMIN'): Observable<{ success: boolean; message: string; data: UserResponse }> {
+    return this.http.patch<{ success: boolean; message: string; data: UserResponse }>(`${this.apiUrl}/users/${userId}/role`, { role });
   }
 
   saveToken(token: string): void {
@@ -56,10 +74,15 @@ export class AuthService {
 
   removeToken(): void {
     sessionStorage.removeItem(this.tokenKey);
+    this.currentUserData = null;
   }
 
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  isAdmin(): boolean {
+    return this.currentUserData?.role === 'ADMIN';
   }
 
   logout(): void {

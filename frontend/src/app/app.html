@@ -13,6 +13,7 @@
         </ng-container>
         <ng-container *ngIf="authService.isLoggedIn()">
           <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a *ngIf="authService.isAdmin()" routerLink="/admin" routerLinkActive="active">Administración</a>
           <button (click)="authService.logout()" class="nav-btn-logout">Salir</button>
         </ng-container>
       </nav>
@@ -24,6 +25,6 @@
   </main>
 
   <footer class="app-footer">
-    <p>&copy; 2026 control-gastos. Fase 5 — Autenticación con JWT</p>
+    <p>&copy; 2026 control-gastos. Fase 6 — Autorización por roles ADMIN y USER</p>
   </footer>
 </div>

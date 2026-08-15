@@ -67,6 +67,29 @@ export class UserRepository {
     const result = await pool.query<UserResponse>(query, [data.name, data.email, data.passwordHash, role]);
     return result.rows[0];
   }
+
+  async updateRole(id: number, role: UserRole): Promise<UserResponse | null> {
+    const query = `
+      UPDATE users
+      SET role = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING 
+        id, 
+        name, 
+        email, 
+        role, 
+        created_at AS "createdAt", 
+        updated_at AS "updatedAt"
+    `;
+    const result = await pool.query<UserResponse>(query, [role, id]);
+    return result.rows[0] || null;
+  }
+
+  async countAdmins(): Promise<number> {
+    const query = `SELECT COUNT(*)::int AS count FROM users WHERE role = 'ADMIN'`;
+    const result = await pool.query<{ count: number }>(query);
+    return result.rows[0].count;
+  }
 }
 
 export const userRepository = new UserRepository();
