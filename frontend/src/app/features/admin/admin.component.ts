@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService, UserResponse } from '../../core/services/auth.service';
 
 @Component({
@@ -9,11 +10,13 @@ import { AuthService, UserResponse } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './admin.component.html',
-  styleUrl: './admin.component.css'
+  styleUrl: './admin.component.css',
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class AdminComponent implements OnInit {
   authService = inject(AuthService);
-  
+  private cdr = inject(ChangeDetectorRef);
+
   users: UserResponse[] = [];
   currentUser: UserResponse | null = null;
   loading: boolean = true;
@@ -21,45 +24,41 @@ export class AdminComponent implements OnInit {
   successMessage: string = '';
 
   ngOnInit(): void {
-    this.loadAdminData();
-  }
-
-  loadAdminData(): void {
-    this.loading = true;
-    this.errorMessage = '';
-
-    if (this.authService.currentUserData) {
-      this.currentUser = this.authService.currentUserData;
-    }
-
-    this.authService.getCurrentUser().subscribe({
-      next: (res) => {
-        if (res && res.data) {
-          this.currentUser = res.data;
-        }
-        this.fetchUsers();
-      },
-      error: () => {
-        this.fetchUsers();
-      }
-    });
+    // Set current user immediately from service state (already populated from login)
+    this.currentUser = this.authService.currentUserData;
+    // Load the users list
+    this.fetchUsers();
   }
 
   fetchUsers(): void {
-    this.authService.getUsers().subscribe({
-      next: (res) => {
-        this.loading = false;
-        if (res && res.success && res.data) {
-          this.users = res.data;
-        } else if (Array.isArray(res)) {
-          this.users = res;
+    this.loading = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.authService.getUsers()
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          // Handle both { success, data: [] } and direct array formats
+          if (Array.isArray(res)) {
+            this.users = res;
+          } else if (res?.data && Array.isArray(res.data)) {
+            this.users = res.data;
+          } else {
+            this.users = [];
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          this.errorMessage = err?.error?.message || 'Error al obtener la lista de usuarios.';
+          this.cdr.detectChanges();
         }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMessage = err.error?.message || 'Error al obtener la lista de usuarios del sistema.';
-      }
-    });
+      });
   }
 
   onRoleChange(user: UserResponse, newRole: 'USER' | 'ADMIN'): void {
@@ -68,19 +67,29 @@ export class AdminComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.authService.updateUserRole(user.id, newRole).subscribe({
-      next: (res) => {
-        if (res && res.success) {
-          this.successMessage = `Rol del usuario ${user.email} actualizado correctamente a ${newRole}.`;
+    this.authService.updateUserRole(user.id, newRole)
+      .subscribe({
+        next: (res: any) => {
+          if (res?.success) {
+            this.successMessage = `Rol de ${user.email} actualizado a ${newRole}.`;
+            this.cdr.detectChanges();
+            this.fetchUsers();
+            setTimeout(() => {
+              this.successMessage = '';
+              this.cdr.detectChanges();
+            }, 4000);
+          }
+        },
+        error: (err: any) => {
+          this.errorMessage = err?.error?.message || 'No se pudo cambiar el rol del usuario.';
+          this.cdr.detectChanges();
           this.fetchUsers();
-          setTimeout(() => this.successMessage = '', 4000);
+          setTimeout(() => {
+            this.errorMessage = '';
+            this.cdr.detectChanges();
+          }, 4000);
         }
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'No se pudo cambiar el rol del usuario.';
-        this.fetchUsers();
-        setTimeout(() => this.errorMessage = '', 4000);
-      }
-    });
+      });
   }
 }
+
