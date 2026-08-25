@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa Conceptual: Optimización, Refactorización e IA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f9f6f0;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 25px;
+      min-height: 100vh;
+    }
+
+    /* Contenedor principal de la tarjeta */
+    .mapa-conceptual {
+      max-width: 1300px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 42px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+      padding: 30px 35px 25px;
+      border: 1px solid #f0e8d8;
+    }
+
+    /* Encabezado */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #d4b896;
+    }
+
+    .header-icon {
+      background: #8b5e3c;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #4a3724;
+      letter-spacing: -0.5px;
+    }
+
+    .header h1 span {
+      color: #8b5e3c;
+      font-weight: 400;
+      font-size: 1.5rem;
+    }
+
+    .datos-estudiante {
+      margin-left: auto;
+      text-align: right;
+      font-size: 0.9rem;
+      color: #5e4a34;
+      background: #f7efe0;
+      padding: 8px 18px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e0cfb5;
+    }
+
+    .datos-estudiante i {
+      font-size: 1.6rem;
+      color: #8b5e3c;
+    }
+
+    .datos-estudiante .nombre {
+      font-weight: 700;
+      color: #3d2b18;
+    }
+
+    /* --- ESTRUCTURA DEL MAPA CONCEPTUAL REAL --- */
+    .scroll-wrapper {
+      width: 100%;
+      overflow-x: auto; /* Permite scroll en pantallas pequeñas sin romper el mapa */
+      padding-bottom: 20px;
+      margin-top: 30px;
+    }
+
+    .cmap-container {
+      position: relative;
+      min-width: 1100px; /* Fuerza el ancho para mantener la jerarquía intacta */
+      padding: 20px 10px 80px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    /* Capas para las líneas SVG y las Palabras de Enlace */
+    #svg-lines, #link-labels {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* Deja que el mouse pase a través de las líneas */
+    }
+
+    #svg-lines { z-index: 1; }
+    #link-labels { z-index: 3; }
+
+    .link-label {
+      position: absolute;
+      transform: translate(-50%, -50%); /* Centrado exacto */
+      background: #ffffff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #725a44;
+      border: 1px dashed #d4b896;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    /* Diseño de los Nodos (Cajas) */
+    .node {
+      padding: 12px 20px;
+      border-radius: 14px;
+      background: white;
+      border: 2px solid #ccc;
+      font-weight: 700;
+      text-align: center;
+      max-width: 180px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .node.leaf {
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 8px 15px;
+      border-radius: 8px;
+      max-width: 160px;
+      border-width: 1px;
+    }
+
+    /* Colores por jerarquía/tema */
+    .node.root { border-color: #8b5e3c; background: #f7efe0; color: #4a3724; font-size: 1.15rem; }
+    .node.opt { border-color: #6b8e5a; background: #f4f9f1; color: #3d5a2e; }
+    .node.ref { border-color: #d4933c; background: #fefaf2; color: #b45f2a; }
+    .node.ia { border-color: #9b6b9e; background: #faf5fb; color: #6e3f73; }
+
+    /* Layout Jerárquico con Flexbox */
+    .branches {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 70px;
+    }
+
+    .branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+
+    .sub-branches {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      margin-top: 70px;
+    }
+
+    .sub-branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 50px; /* Espacio vertical para las cadenas de nodos */
+    }
+
+    /* Pie */
+    .nota-pie {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #9b8a75;
+      border-top: 2px dotted #d9c7ac;
+      padding-top: 15px;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .mapa-conceptual { border: none; box-shadow: none; max-width: 100%; border-radius: 0; }
+      .scroll-wrapper { overflow: visible; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      @page { size: landscape; margin: 0.5cm; }
+    }
+  </style>
+</head>
+<body>
+<div class="mapa-conceptual">
+
+  <!-- Cabecera -->
+  <div class="header">
+    <div class="header-icon"><i class="fas fa-project-diagram"></i></div>
+    <h1>Mapa Conceptual <span>— Optimización, Refactorización e IA</span></h1>
+    <div class="datos-estudiante">
+      <i class="fas fa-user-graduate"></i>
+      <div>
+        <div class="nombre">André Paolo García Valdéz</div>
+        <div>Carne: 2022075 | 5to Informática "A"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zona con scroll horizontal para móviles -->
+  <div class="scroll-wrapper">
+    <div class="cmap-container" id="cmap-container">
+      
+      <!-- Capas de Dibujo (Automáticas vía JS) -->
+      <svg id="svg-lines">
+        <defs>
+          <marker id="arrow-opt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6b8e5a" /></marker>
+          <marker id="arrow-ref" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d4933c" /></marker>
+          <marker id="arrow-ia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9b6b9e" /></marker>
+          <marker id="arrow-neutral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#aa8c7a" /></marker>
+        </defs>
+      </svg>
+      <div id="link-labels"></div>
+
+      <!-- NIVEL 0: NODO CENTRAL -->
+      <div class="node root" id="root">
+        <i class="fas fa-laptop-code"></i> Desarrollo de Software
+      </div>
+
+      <!-- NIVEL 1: RAMAS PRINCIPALES -->
+      <div class="branches">
+        
+        <!-- RAMA 1: OPTIMIZACIÓN -->
+        <div class="branch">
+          <div class="node opt" id="opt"><i class="fas fa-tachometer-alt"></i> Optimización</div>
+          <div class="sub-branches">
+            <div class="sub-branch">
+              <div class="node opt" id="opt-pro">Propósito</div>
+              <div class="node opt leaf" id="opt-pro-1">Mayor Rapidez</div>
+              <div class="node opt leaf" id="opt-pro-2">Menor Memoria</div>
+            </div>
+            <div class="sub-branch">
+              <div class="node opt" id="opt-obj">Objetivos</div>
+              <div class="node opt leaf" id="opt-obj-1">Rendimiento</div>
+              <div class="node opt leaf" id="opt-obj-2">Eficiencia</div>
+              <div class="node opt leaf" id="opt-obj-3">Bajo Consumo</div>
+            </div>
+            <div class="sub-branch">
+              <div class="node opt" id="opt-tec">Técnicas</div>
+              <div class="node opt leaf" id="opt-tec-1">Algoritmos Eficientes</div>
+              <div class="node opt leaf" id="opt-tec-2">Menor Complejidad</div>
+              <div class="node opt leaf" id="opt-tec-3">Caching</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RAMA 2: REFACTORIZACIÓN -->
+        <div class="branch">
+          <div class="node ref" id="ref"><i class="fas fa-broom"></i> Refactorización</div>
+          <div class="sub-branches">
+            <div class="sub-branch">
+              <div class="node ref" id="ref-def">Definición</div>
+              <div class="node ref leaf" id="ref-def-1">Reestructuración</div>
+              <div class="node ref leaf" id="ref-def-2">Comportamiento Intacto</div>
+            </div>
+            <div class="sub-branch">
+              <div class="node ref" id="ref-ben">Beneficios</div>
+              <div class="node ref leaf" id="ref-ben-1">Legibilidad</div>
+              <div class="node ref leaf" id="ref-ben-2">Modularidad</div>
+              <div class="node ref leaf" id="ref-ben-3">Mantenimiento</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RAMA 3: INTELIGENCIA ARTIFICIAL -->
+        <div class="branch">
+          <div class="node ia" id="ia"><i class="fas fa-robot"></i> Inteligencia Artificial</div>
+          <div class="sub-branches">
+            <div class="sub-branch">
+              <div class="node ia" id="ia-app">Aplicaciones</div>
+              <div class="node ia leaf" id="ia-app-1">Asistentes Código</div>
+              <div class="node ia leaf" id="ia-app-2">Detección Errores</div>
+              <div class="node ia leaf" id="ia-app-3">Documentación</div>
+              <div class="node ia leaf" id="ia-app-4">Pruebas Automáticas</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Nota pie -->
+  <div class="nota-pie">
+    <i class="fas fa-check-double"></i> Cumple con: Nodos aislados, Palabras de enlace, Jerarquía top-down y Relaciones cruzadas directas.
+  </div>
+</div>
+
+<!-- Lógica para dibujar líneas de conexión perfectas -->
+<script>
+  const colorOpt = '#6b8e5a';
+  const colorRef = '#d4933c';
+  const colorIA = '#9b6b9e';
+  const colorNeutral = '#aa8c7a';
+
+  // Matriz de todas las conexiones (jerárquicas y cruzadas)
+  const links = [
+    // Raíz -> Ramas
+    { from: 'root', to: 'opt', text: 'incluye', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'root', to: 'ref', text: 'implica', color: colorRef, marker: 'arrow-ref' },
+    { from: 'root', to: 'ia', text: 'se asiste con', color: colorIA, marker: 'arrow-ia' },
+
+    // Optimización (Sub-ramas y hojas)
+    { from: 'opt', to: 'opt-pro', text: 'tiene un', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-pro', to: 'opt-pro-1', text: 'que es', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-pro-1', to: 'opt-pro-2', text: 'y', color: colorOpt, marker: 'arrow-opt' },
+
+    { from: 'opt', to: 'opt-obj', text: 'busca', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-obj', to: 'opt-obj-1', text: 'mejorar', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-obj-1', to: 'opt-obj-2', text: 'aumentar', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-obj-2', to: 'opt-obj-3', text: 'y bajar', color: colorOpt, marker: 'arrow-opt' },
+
+    { from: 'opt', to: 'opt-tec', text: 'usa', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-tec', to: 'opt-tec-1', text: 'ej.', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-tec-1', to: 'opt-tec-2', text: 'y', color: colorOpt, marker: 'arrow-opt' },
+    { from: 'opt-tec-2', to: 'opt-tec-3', text: 'como', color: colorOpt, marker: 'arrow-opt' },
+
+    // Refactorización
+    { from: 'ref', to: 'ref-def', text: 'es una', color: colorRef, marker: 'arrow-ref' },
+    { from: 'ref-def', to: 'ref-def-1', text: 'de código', color: colorRef, marker: 'arrow-ref' },
+    { from: 'ref-def-1', to: 'ref-def-2', text: 'con', color: colorRef, marker: 'arrow-ref' },
+
+    { from: 'ref', to: 'ref-ben', text: 'aporta', color: colorRef, marker: 'arrow-ref' },
+    { from: 'ref-ben', to: 'ref-ben-1', text: 'como', color: colorRef, marker: 'arrow-ref' },
+    { from: 'ref-ben-1', to: 'ref-ben-2', text: 'y', color: colorRef, marker: 'arrow-ref' },
+    { from: 'ref-ben-2', to: 'ref-ben-3', text: 'facilitando', color: colorRef, marker: 'arrow-ref' },
+
+    // Inteligencia Artificial
+    { from: 'ia', to: 'ia-app', text: 'ofrece', color: colorIA, marker: 'arrow-ia' },
+    { from: 'ia-app', to: 'ia-app-1', text: 'ej.', color: colorIA, marker: 'arrow-ia' },
+    { from: 'ia-app-1', to: 'ia-app-2', text: 'y', color: colorIA, marker: 'arrow-ia' },
+    { from: 'ia-app-2', to: 'ia-app-3', text: 'y', color: colorIA, marker: 'arrow-ia' },
+    { from: 'ia-app-3', to: 'ia-app-4', text: 'y', color: colorIA, marker: 'arrow-ia' },
+
+    // RELACIONES CRUZADAS (Requisito estricto de la rúbrica)
+    { from: 'opt', to: 'ref', text: 'difiere en objetivo', dashed: true, curve: -60, color: colorNeutral, marker: 'arrow-neutral' },
+    { from: 'ref', to: 'opt', text: 'facilita la', dashed: true, curve: 60, color: colorNeutral, marker: 'arrow-neutral' },
+    { from: 'ia', to: 'ref', text: 'automatiza', dashed: true, curve: -50, color: colorNeutral, marker: 'arrow-neutral' },
+    { from: 'ia', to: 'opt', text: 'sugiere mejoras', dashed: true, curve: 160, color: colorNeutral, marker: 'arrow-neutral' }
+  ];
+
+  function drawMap() {
+    const container = document.getElementById('cmap-container');
+    const svg = document.getElementById('svg-lines');
+    const labelsContainer = document.getElementById('link-labels');
+    const cRect = container.getBoundingClientRect();
+
+    // Limpiar renderizado anterior
+    svg.innerHTML = svg.querySelector('defs').outerHTML;
+    labelsContainer.innerHTML = '';
+
+    links.forEach(link => {
+      const el1 = document.getElementById(link.from);
+      const el2 = document.getElementById(link.to);
+      if (!el1 || !el2) return;
+
+      const r1 = el1.getBoundingClientRect();
+      const r2 = el2.getBoundingClientRect();
+
+      let startX, startY, endX, endY, pathD, labelX, labelY;
+
+      if (link.dashed) {
+        // Enlaces cruzados: conectan los bordes laterales y se arquean
+        if (r1.left > r2.left) {
+          startX = r1.left - cRect.left;
+          endX = r2.right - cRect.left;
+        } else {
+          startX = r1.right - cRect.left;
+          endX = r2.left - cRect.left;
+        }
+        startY = r1.top + r1.height / 2 - cRect.top;
+        endY = r2.top + r2.height / 2 - cRect.top;
+
+        const midX = startX + (endX - startX) / 2;
+        const midY = startY + (endY - startY) / 2;
+        const offset = link.curve || 0;
+
+        pathD = `M ${startX} ${startY} Q ${midX} ${midY + offset} ${endX} ${endY}`;
+        labelX = midX;
+        labelY = midY + offset / 2;
+      } else {
+        // Enlaces jerárquicos: conectan parte inferior con parte superior
+        startX = r1.left + r1.width / 2 - cRect.left;
+        startY = r1.bottom - cRect.top;
+        endX = r2.left + r2.width / 2 - cRect.left;
+        endY = r2.top - cRect.top;
+
+        const cY = startY + (endY - startY) / 2;
+        pathD = `M ${startX} ${startY} C ${startX} ${cY}, ${endX} ${cY}, ${endX} ${endY}`;
+        labelX = startX + (endX - startX) / 2;
+        labelY = startY + (endY - startY) / 2;
+      }
+
+      // Dibujar línea (Path SVG)
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', link.color);
+      path.setAttribute('stroke-width', '2');
+      if (link.dashed) path.setAttribute('stroke-dasharray', '6,6');
+      path.setAttribute('marker-end', `url(#${link.marker})`);
+      svg.appendChild(path);
+
+      // Crear Etiqueta HTML (Palabra de enlace)
+      if (link.text) {
+        const label = document.createElement('div');
+        label.className = 'link-label';
+        label.innerText = link.text;
+        label.style.left = `${labelX}px`;
+        label.style.top = `${labelY}px`;
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // Escuchadores para mantener líneas calibradas
+  window.addEventListener('load', () => setTimeout(drawMap, 150));
+  window.addEventListener('resize', drawMap);
+</script>
+</body>
+</html>
