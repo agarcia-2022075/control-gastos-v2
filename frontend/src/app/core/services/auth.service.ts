@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SessionService } from './session.service';
 
 export interface UserResponse {
   id: number;
@@ -24,6 +25,7 @@ export interface AuthResponse {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private sessionService = inject(SessionService);
   private apiUrl = environment.apiUrl;
   private tokenKey = 'auth_token';
 
@@ -66,6 +68,7 @@ export class AuthService {
 
   saveToken(token: string): void {
     sessionStorage.setItem(this.tokenKey, token);
+    this.sessionService.startProactiveSessionMonitor();
   }
 
   getToken(): string | null {
@@ -75,6 +78,7 @@ export class AuthService {
   removeToken(): void {
     sessionStorage.removeItem(this.tokenKey);
     this.currentUserData = null;
+    this.sessionService.clearTimers();
   }
 
   isLoggedIn(): boolean {
