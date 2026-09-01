@@ -1,6 +1,6 @@
 <div class="app-layout">
   <!-- Background Abstract Glowing Orbs for Glassmorphism -->
-  <div class="bg-orbs-container" aria-hidden="true">
+  <div class="bg-orbs-container" aria-hidden="true" *ngIf="!isFullLayoutRoute()">
     <div class="bg-orb orb-cyan"></div>
     <div class="bg-orb orb-purple"></div>
     <div class="bg-orb orb-blue"></div>
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <header class="app-header">
+  <header class="app-header" *ngIf="!isFullLayoutRoute()">
     <div class="header-container">
       <a routerLink="/dashboard" class="brand">
         <div class="brand-icon-wrapper">
@@ -43,11 +43,11 @@
     </div>
   </header>
 
-  <main class="main-content">
+  <main class="main-content" [class.full-layout]="isFullLayoutRoute()">
     <router-outlet></router-outlet>
   </main>
 
-  <footer class="app-footer">
+  <footer class="app-footer" *ngIf="!isFullLayoutRoute()">
     <p>&copy; 2026 control-gastos</p>
   </footer>
 </div>

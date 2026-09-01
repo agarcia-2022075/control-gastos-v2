@@ -18,7 +18,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      // Ignorar 401 en endpoints de autenticación (login / register) para mostrar el mensaje de error en el formulario en lugar del modal de sesión caducada
+      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/register');
+      if (error.status === 401 && !isAuthEndpoint) {
         sessionService.notifySessionExpired();
       }
       return throwError(() => error);
