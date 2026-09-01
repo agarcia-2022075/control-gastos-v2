@@ -17,5 +17,5 @@ export const env = {
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@controlgastos.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'admin123',
   JWT_SECRET: process.env.JWT_SECRET || 'secret',
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1m'
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '2m'
 };
