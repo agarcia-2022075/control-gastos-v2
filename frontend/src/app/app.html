@@ -1,0 +1,53 @@
+<div class="app-layout">
+  <!-- Background Abstract Glowing Orbs for Glassmorphism -->
+  <div class="bg-orbs-container" aria-hidden="true">
+    <div class="bg-orb orb-cyan"></div>
+    <div class="bg-orb orb-purple"></div>
+    <div class="bg-orb orb-blue"></div>
+    <div class="bg-orb orb-magenta"></div>
+  </div>
+
+  <!-- Session Expired Glassmorphic Modal Overlay -->
+  <div *ngIf="sessionService.isSessionExpired()" class="session-modal-backdrop">
+    <div class="session-modal-card glass-modal">
+      <div class="session-modal-icon">
+        <span class="icon-pulse">⌛</span>
+      </div>
+      <h2>Tu sesión ha finalizado</h2>
+      <p>Por tu seguridad, el tiempo de acceso de esta sesión ha caducado. Por favor, haz clic abajo para ingresar de nuevo a tu cuenta.</p>
+      <button (click)="sessionService.redirectToLogin()" class="btn-session-reconnect">
+        Reconectar e Iniciar Sesión
+      </button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-container">
+      <a routerLink="/dashboard" class="brand">
+        <div class="brand-icon-wrapper">
+          <img src="logo.jpg" alt="Logo control-gastos" class="brand-logo-img">
+        </div>
+        <span class="brand-name">control<span class="brand-accent">-gastos</span></span>
+      </a>
+      <nav class="nav-links">
+        <ng-container *ngIf="!authService.isLoggedIn()">
+          <a routerLink="/login" routerLinkActive="active">Iniciar Sesión</a>
+          <a routerLink="/register" routerLinkActive="active" class="btn-nav-accent">Registro</a>
+        </ng-container>
+        <ng-container *ngIf="authService.isLoggedIn()">
+          <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a *ngIf="authService.isAdmin()" routerLink="/admin" routerLinkActive="active">Administración</a>
+          <button (click)="authService.logout()" class="nav-btn-logout">Cerrar Sesión</button>
+        </ng-container>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="app-footer">
+    <p>&copy; 2026 control-gastos</p>
+  </footer>
+</div>
