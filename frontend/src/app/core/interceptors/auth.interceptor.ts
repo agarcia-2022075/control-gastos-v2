@@ -1,6 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
+import { catchError, tap, throwError } from 'rxjs';
 import { SessionService } from '../services/session.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -17,6 +17,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   return next(request).pipe(
+    tap(() => {
+      // Reiniciar temporizador de inactividad con cada petición HTTP exitosa
+      sessionService.resetInactivityTimer();
+    }),
     catchError((error: HttpErrorResponse) => {
       // Ignorar 401 en endpoints de autenticación (login / register) para mostrar el mensaje de error en el formulario en lugar del modal de sesión caducada
       const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/register');

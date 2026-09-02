@@ -68,7 +68,7 @@ export class AuthService {
 
   saveToken(token: string): void {
     sessionStorage.setItem(this.tokenKey, token);
-    this.sessionService.startProactiveSessionMonitor();
+    this.sessionService.startInactivityMonitor();
   }
 
   getToken(): string | null {
@@ -78,7 +78,7 @@ export class AuthService {
   removeToken(): void {
     sessionStorage.removeItem(this.tokenKey);
     this.currentUserData = null;
-    this.sessionService.clearTimers();
+    this.sessionService.stopInactivityMonitor();
   }
 
   isLoggedIn(): boolean {
