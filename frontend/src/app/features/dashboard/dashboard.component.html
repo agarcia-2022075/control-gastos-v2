@@ -44,7 +44,7 @@
             <svg style="width:14px; height:14px; stroke:#f43f5e; fill:none; stroke-width:2;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Registrar Gasto</span>
           </a>
-          <a class="sub-menu-item" routerLink="/dashboard" title="Registrar Ingreso">
+          <a class="sub-menu-item" routerLink="/ingreso" title="Registrar Ingreso">
             <svg style="width:14px; height:14px; stroke:#34d399; fill:none; stroke-width:2;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
             <span>Registrar Ingreso</span>
           </a>
@@ -155,10 +155,10 @@
               <svg style="width:18px; height:18px; stroke:#ffffff; stroke-width:2.5; stroke-linecap:round; fill:none;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>Registrar Gasto</span>
             </button>
-            <button class="btn-action-secondary">
+            <a class="btn-action-secondary" routerLink="/ingreso" style="text-decoration: none;">
               <svg style="width:18px; height:18px; stroke:#ffffff; stroke-width:2; stroke-linecap:round; fill:none;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
               <span>Añadir Ingreso</span>
-            </button>
+            </a>
             <button class="btn-action-secondary">
               <svg style="width:18px; height:18px; stroke:#ffffff; stroke-width:2; stroke-linecap:round; fill:none;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
               <span>Exportar PDF</span>
@@ -388,12 +388,21 @@
 
             <!-- Transactions Table Panel -->
             <div class="main-glass-panel">
-              <div class="panel-section-header">
-                <h2 class="panel-section-title">Últimas Transacciones Recientes ({{ activeFilterTx }})</h2>
-                <div class="filter-pills">
-                  <span class="filter-pill" [class.active]="activeFilterTx === 'Todas'" (click)="setTxFilter('Todas')">Todas</span>
-                  <span class="filter-pill" [class.active]="activeFilterTx === 'Gastos'" (click)="setTxFilter('Gastos')">Gastos</span>
-                  <span class="filter-pill" [class.active]="activeFilterTx === 'Ingresos'" (click)="setTxFilter('Ingresos')">Ingresos</span>
+              <div class="panel-section-header" style="flex-wrap: wrap; gap: 1rem;">
+                <h2 class="panel-section-title">Últimas Transacciones ({{ activeFilterTx }})</h2>
+                
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <!-- Buscador en Vivo -->
+                  <div class="table-search-box">
+                    <input type="text" class="glass-search-input" placeholder="🔍 Buscar transacciones..." [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()">
+                  </div>
+
+                  <!-- Filtros de Tipo -->
+                  <div class="filter-pills">
+                    <span class="filter-pill" [class.active]="activeFilterTx === 'Todas'" (click)="setTxFilter('Todas')">Todas</span>
+                    <span class="filter-pill" [class.active]="activeFilterTx === 'Gastos'" (click)="setTxFilter('Gastos')">Gastos</span>
+                    <span class="filter-pill" [class.active]="activeFilterTx === 'Ingresos'" (click)="setTxFilter('Ingresos')">Ingresos</span>
+                  </div>
                 </div>
               </div>
 
@@ -409,7 +418,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let tx of filteredTransactions">
+                    <tr *ngFor="let tx of paginatedTransactions">
                       <td>
                         <div class="tx-item">
                           <div class="tx-icon-badge">
@@ -434,17 +443,26 @@
                       </td>
                     </tr>
 
-                    <tr *ngIf="filteredTransactions.length === 0">
+                    <tr *ngIf="paginatedTransactions.length === 0">
                       <td colspan="5" style="text-align: center; padding: 2.5rem 1rem;">
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
                           <svg style="width:32px; height:32px; stroke:#64748b; stroke-width:1.5; fill:none;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                          <span style="font-weight: 700; color: #cbd5e1; font-size: 0.95rem;">No hay transacciones de tipo {{ activeFilterTx }}</span>
-                          <span style="font-size: 0.82rem; color: #64748b;">Tus movimientos individuales aparecerán aquí al registrarlos.</span>
+                          <span style="font-weight: 700; color: #cbd5e1; font-size: 0.95rem;">No se encontraron transacciones</span>
+                          <span style="font-size: 0.82rem; color: #64748b;">Intenta cambiar el término de búsqueda o el filtro de tipo.</span>
                         </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <!-- Paginación de Tabla -->
+              <div class="pagination-footer" *ngIf="filteredTransactions.length > 0">
+                <span class="pagination-info">Página {{ currentPage }} de {{ totalPages }} ({{ filteredTransactions.length }} movimientos)</span>
+                <div class="pagination-buttons">
+                  <button class="btn-page" (click)="prevPage()" [disabled]="currentPage === 1">‹ Anterior</button>
+                  <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente ›</button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService, UserResponse } from '../../core/services/auth.service';
-import { DashboardService, DashboardStats, TrendPoint } from '../../core/services/dashboard.service';
+import { DashboardService, DashboardStats, RecentTransaction, TrendPoint } from '../../core/services/dashboard.service';
 
 export interface TrendDataPoint {
   label: string;
@@ -33,7 +34,7 @@ export interface TrendDataSet {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -46,7 +47,10 @@ export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null;
   
   loading: boolean = true;
+  editing: boolean = false;
+  deleting: boolean = false;
   errorMessage: string = '';
+  successMessage: string = '';
 
   // UI Navigation & Accordion States
   isCollapsed: boolean = false;
@@ -56,8 +60,24 @@ export class DashboardComponent implements OnInit {
   activeFilterTrend: 'Semana' | 'Mes' | 'Año' = 'Mes';
   activeFilterTx: 'Todas' | 'Gastos' | 'Ingresos' = 'Todas';
 
+  // Table Search and Pagination States
+  searchTerm: string = '';
+  currentPage: number = 1;
+  pageSize: number = 5;
+
   // Active Tooltip Point on Chart Hover
   hoveredPoint: TrendDataPoint | null = null;
+
+  // Edit Transaction Modal State
+  transactionToEdit: RecentTransaction | null = null;
+  editTitle: string = '';
+  editCategory: string = '';
+  editAmount: number | null = null;
+  editMerchant: string = '';
+  editDate: string = '';
+
+  // Delete Transaction Modal State
+  transactionToDelete: RecentTransaction | null = null;
 
   private mapValueToY(val: number, maxVal: number): number {
     const minY = 160;
@@ -74,7 +94,6 @@ export class DashboardComponent implements OnInit {
     const availableWidth = endX - startX;
     const step = rawPoints.length > 1 ? availableWidth / (rawPoints.length - 1) : availableWidth;
 
-    // Check if user has non-zero data
     let maxVal = 0;
     let hasData = false;
     rawPoints.forEach(p => {
@@ -145,8 +164,7 @@ export class DashboardComponent implements OnInit {
 
   private formatK(val: number): string {
     if (val >= 1000) {
-      const k = val / 1000;
-      return Number.isInteger(k) ? `${k}k` : `${k.toFixed(1)}k`;
+      return (val / 1000).toFixed(val % 1000 === 0 ? 0 : 1) + 'k';
     }
     return val.toString();
   }
@@ -227,6 +245,164 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  get filteredTransactions() {
+    if (!this.stats || !this.stats.transaccionesRecientes) return [];
+    let list = this.stats.transaccionesRecientes;
+    const filter = this.activeFilterTx;
+
+    if (filter === 'Gastos') {
+      list = list.filter(tx => tx.type === 'EXPENSE' || (tx as any).type === 'GASTO' || tx.amount < 0);
+    } else if (filter === 'Ingresos') {
+      list = list.filter(tx => tx.type === 'INCOME' || (tx as any).type === 'INGRESO' || tx.amount > 0);
+    }
+
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase().trim();
+      list = list.filter(tx =>
+        tx.title.toLowerCase().includes(term) ||
+        tx.category.toLowerCase().includes(term) ||
+        tx.merchant.toLowerCase().includes(term) ||
+        tx.date.includes(term) ||
+        tx.amount.toString().includes(term)
+      );
+    }
+
+    return list;
+  }
+
+  get paginatedTransactions(): RecentTransaction[] {
+    const list = this.filteredTransactions;
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return list.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredTransactions.length / this.pageSize) || 1;
+  }
+
+  onSearchChange(): void {
+    this.currentPage = 1;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.cdr.detectChanges();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Edit Modal Actions
+  openEditModal(tx: RecentTransaction, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.transactionToEdit = tx;
+    this.editTitle = tx.title;
+    this.editCategory = tx.category;
+    this.editAmount = tx.amount;
+    this.editMerchant = tx.merchant;
+    this.editDate = tx.date;
+    this.cdr.detectChanges();
+  }
+
+  cancelEdit(): void {
+    this.transactionToEdit = null;
+    this.editing = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmEdit(): void {
+    if (!this.transactionToEdit) return;
+    if (!this.editAmount || this.editAmount <= 0) {
+      this.errorMessage = 'Por favor ingresa un monto válido mayor a 0.';
+      return;
+    }
+    if (!this.editTitle.trim()) {
+      this.errorMessage = 'Por favor ingresa una descripción.';
+      return;
+    }
+
+    this.editing = true;
+    const id = this.transactionToEdit.id;
+
+    this.dashboardService.updateTransaction(id, {
+      title: this.editTitle.trim(),
+      category: this.editCategory,
+      amount: Number(this.editAmount),
+      merchant: this.editMerchant,
+      date: this.editDate
+    }).subscribe({
+      next: (res: any) => {
+        this.editing = false;
+        if (res.success) {
+          this.successMessage = 'Transacción actualizada exitosamente.';
+          this.transactionToEdit = null;
+          this.fetchStats();
+        } else {
+          this.errorMessage = res.message || 'Error al actualizar la transacción.';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.editing = false;
+        this.errorMessage = err.error?.message || 'Error al actualizar la transacción.';
+        this.transactionToEdit = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Delete Modal Actions
+  openDeleteModal(tx: RecentTransaction, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.transactionToDelete = tx;
+    this.cdr.detectChanges();
+  }
+
+  cancelDelete(): void {
+    this.transactionToDelete = null;
+    this.deleting = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmDelete(): void {
+    if (!this.transactionToDelete) return;
+
+    this.deleting = true;
+    const id = this.transactionToDelete.id;
+
+    this.dashboardService.deleteTransaction(id).subscribe({
+      next: (res) => {
+        this.deleting = false;
+        if (res.success) {
+          this.successMessage = 'Transacción eliminada exitosamente. Tu saldo y estadísticas se han actualizado.';
+          this.transactionToDelete = null;
+          this.fetchStats();
+        } else {
+          this.errorMessage = res.message || 'Error al eliminar la transacción.';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.deleting = false;
+        this.errorMessage = err.error?.message || 'Error al eliminar la transacción.';
+        this.transactionToDelete = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
   }
@@ -248,28 +424,13 @@ export class DashboardComponent implements OnInit {
 
   setTxFilter(filter: 'Todas' | 'Gastos' | 'Ingresos'): void {
     this.activeFilterTx = filter;
+    this.currentPage = 1;
     this.cdr.detectChanges();
   }
 
   onPointHover(pt: TrendDataPoint | null): void {
     this.hoveredPoint = pt;
     this.cdr.detectChanges();
-  }
-
-  get filteredTransactions() {
-    if (!this.stats || !this.stats.transaccionesRecientes) return [];
-    const filter = this.activeFilterTx;
-    if (filter === 'Gastos') {
-      return this.stats.transaccionesRecientes.filter(tx => 
-        tx.type === 'EXPENSE' || (tx as any).type === 'GASTO' || tx.amount < 0
-      );
-    }
-    if (filter === 'Ingresos') {
-      return this.stats.transaccionesRecientes.filter(tx => 
-        tx.type === 'INCOME' || (tx as any).type === 'INGRESO' || tx.amount > 0
-      );
-    }
-    return this.stats.transaccionesRecientes;
   }
 
   logout(): void {
