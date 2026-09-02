@@ -9,15 +9,21 @@ export class SessionService {
   private ngZone = inject(NgZone);
 
   isSessionExpired = signal<boolean>(false);
-  private timerHandle: any = null;
+
+  // Plazo de inactividad: 3 minutos (180,000 ms) para pruebas y verificación automática en tiempo real
+  private readonly INACTIVITY_LIMIT_MS = 3 * 60 * 1000;
+
+  private idleTimer: any = null;
   private intervalCheckHandle: any = null;
+  private lastActivityTime: number = Date.now();
+  private eventListeners: Array<() => void> = [];
 
   constructor() {
-    this.startProactiveSessionMonitor();
+    this.startInactivityMonitor();
   }
 
   notifySessionExpired(): void {
-    this.clearTimers();
+    this.stopInactivityMonitor();
     this.ngZone.run(() => {
       this.isSessionExpired.set(true);
     });
@@ -26,76 +32,78 @@ export class SessionService {
   redirectToLogin(): void {
     this.ngZone.run(() => {
       this.isSessionExpired.set(false);
-      this.clearTimers();
+      this.stopInactivityMonitor();
       sessionStorage.removeItem('auth_token');
       this.router.navigate(['/login']);
     });
   }
 
-  public startProactiveSessionMonitor(): void {
-    this.clearTimers();
+  public startInactivityMonitor(): void {
+    this.stopInactivityMonitor();
     const token = sessionStorage.getItem('auth_token');
     if (!token) return;
 
-    const payload = this.parseJwt(token);
-    if (!payload || !payload.exp) return;
-
-    const expirationMs = payload.exp * 1000;
-    const timeUntilExpiration = expirationMs - Date.now();
-
-    if (timeUntilExpiration <= 0) {
-      this.notifySessionExpired();
-      return;
-    }
-
-    // 1. Temporizador de precisión para el tiempo exacto de expiración del JWT
-    this.timerHandle = setTimeout(() => {
-      this.notifySessionExpired();
-    }, timeUntilExpiration);
-
-    // 2. Verificación en tiempo real cada 1 segundo (dispara la modal instantáneamente sin refrescar)
-    this.ngZone.runOutsideAngular(() => {
-      this.intervalCheckHandle = setInterval(() => {
-        const currentToken = sessionStorage.getItem('auth_token');
-        if (!currentToken) {
-          this.clearTimers();
-          return;
-        }
-        const p = this.parseJwt(currentToken);
-        if (p && p.exp) {
-          const remaining = p.exp * 1000 - Date.now();
-          if (remaining <= 0) {
-            this.notifySessionExpired();
-          }
-        }
-      }, 1000);
-    });
+    this.lastActivityTime = Date.now();
+    this.attachActivityListeners();
+    this.startIntervalCheck();
   }
 
-  public clearTimers(): void {
-    if (this.timerHandle) {
-      clearTimeout(this.timerHandle);
-      this.timerHandle = null;
+  public stopInactivityMonitor(): void {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
     }
     if (this.intervalCheckHandle) {
       clearInterval(this.intervalCheckHandle);
       this.intervalCheckHandle = null;
     }
+    this.detachActivityListeners();
   }
 
-  private parseJwt(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        window.atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      return null;
-    }
+  public resetInactivityTimer(): void {
+    this.lastActivityTime = Date.now();
+  }
+
+  private startIntervalCheck(): void {
+    this.ngZone.runOutsideAngular(() => {
+      this.intervalCheckHandle = setInterval(() => {
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) {
+          this.stopInactivityMonitor();
+          return;
+        }
+
+        const elapsed = Date.now() - this.lastActivityTime;
+        if (elapsed >= this.INACTIVITY_LIMIT_MS) {
+          this.notifySessionExpired();
+        }
+      }, 1000);
+    });
+  }
+
+  private attachActivityListeners(): void {
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+
+    let lastReset = 0;
+    const handleUserActivity = () => {
+      const now = Date.now();
+      // Debounce de 500ms para actualizar el tiempo de última actividad durante navegación continua
+      if (now - lastReset > 500) {
+        lastReset = now;
+        this.lastActivityTime = now;
+      }
+    };
+
+    this.ngZone.runOutsideAngular(() => {
+      events.forEach(eventName => {
+        window.addEventListener(eventName, handleUserActivity, { passive: true });
+        this.eventListeners.push(() => window.removeEventListener(eventName, handleUserActivity));
+      });
+    });
+  }
+
+  private detachActivityListeners(): void {
+    this.eventListeners.forEach(cleanup => cleanup());
+    this.eventListeners = [];
   }
 }

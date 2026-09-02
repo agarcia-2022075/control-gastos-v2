@@ -68,4 +68,28 @@ export class DashboardService {
   getStats(): Observable<DashboardResponse> {
     return this.http.get<DashboardResponse>(`${this.apiUrl}/stats`);
   }
+
+  createIncome(data: {
+    title: string;
+    category: string;
+    amount: number;
+    merchant?: string;
+    date?: string;
+  }): Observable<{ success: boolean; message: string; data?: any }> {
+    return this.http.post<{ success: boolean; message: string; data?: any }>(`${this.apiUrl}/incomes`, data);
+  }
+
+  updateTransaction(id: number, data: {
+    title?: string;
+    category?: string;
+    amount?: number;
+    merchant?: string;
+    date?: string;
+  }): Observable<{ success: boolean; message: string; data?: any }> {
+    return this.http.patch<{ success: boolean; message: string; data?: any }>(`${this.apiUrl}/transactions/${id}`, data);
+  }
+
+  deleteTransaction(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/transactions/${id}`);
+  }
 }

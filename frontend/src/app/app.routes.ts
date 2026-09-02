@@ -22,6 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'ingreso',
+    loadComponent: () => import('./features/ingreso/ingreso.component').then(m => m.IngresoComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
     canActivate: [authGuard, roleGuard]
