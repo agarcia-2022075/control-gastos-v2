@@ -53,6 +53,76 @@ export class DashboardRepository {
     return result.rows;
   }
 
+  async createTransaction(userId: number, data: {
+    type: 'EXPENSE' | 'INCOME';
+    title: string;
+    merchant?: string | null;
+    category: string;
+    amount: number;
+    status?: 'COMPLETED' | 'PENDING';
+    date?: string | null;
+  }): Promise<TransactionRow> {
+    const query = `
+      INSERT INTO transactions (user_id, type, title, merchant, category, amount, status, date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8::date, CURRENT_DATE))
+      RETURNING id, user_id, type, title, merchant, category, amount, status,
+                TO_CHAR(date, 'YYYY-MM-DD') as date, created_at
+    `;
+    const values = [
+      userId,
+      data.type,
+      data.title,
+      data.merchant || null,
+      data.category,
+      data.amount,
+      data.status || 'COMPLETED',
+      data.date || null
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
+
+  async updateTransactionById(id: number, userId: number, data: {
+    title?: string;
+    merchant?: string | null;
+    category?: string;
+    amount?: number;
+    date?: string | null;
+  }): Promise<TransactionRow | null> {
+    const query = `
+      UPDATE transactions
+      SET title = COALESCE($1, title),
+          merchant = COALESCE($2, merchant),
+          category = COALESCE($3, category),
+          amount = COALESCE($4, amount),
+          date = COALESCE($5::date, date)
+      WHERE id = $6 AND user_id = $7
+      RETURNING id, user_id, type, title, merchant, category, amount, status,
+                TO_CHAR(date, 'YYYY-MM-DD') as date, created_at
+    `;
+    const values = [
+      data.title || null,
+      data.merchant !== undefined ? data.merchant : null,
+      data.category || null,
+      data.amount !== undefined ? data.amount : null,
+      data.date || null,
+      id,
+      userId
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  }
+
+  async deleteTransactionById(id: number, userId: number): Promise<boolean> {
+    const query = `
+      DELETE FROM transactions
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `;
+    const result = await pool.query(query, [id, userId]);
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
   async getSavingsGoalByUserId(userId: number): Promise<SavingsGoalRow | null> {
     const query = `
       SELECT id, user_id, target_amount, current_amount

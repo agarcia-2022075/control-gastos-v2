@@ -82,23 +82,29 @@ export class DashboardService {
 
     transactions.forEach((tx) => {
       const amount = parseFloat(tx.amount);
-      const txDate = new Date(tx.date);
+
+      // Timezone-safe Date parsing from YYYY-MM-DD string
+      const dateParts = String(tx.date).split('T')[0].split('-');
+      const year = parseInt(dateParts[0], 10);
+      const monthIdx = parseInt(dateParts[1], 10) - 1; // 0..11
+      const day = parseInt(dateParts[2], 10);
+      const txDate = new Date(year, monthIdx, day);
 
       if (tx.type === 'INCOME') {
         totalIncome += amount;
-        if (txDate.getMonth() === currentMonthIdx && txDate.getFullYear() === currentYear) {
+        if (monthIdx === currentMonthIdx && year === currentYear) {
           currentMonthIncome += amount;
         }
       } else {
         totalExpense += amount;
-        if (txDate.getMonth() === currentMonthIdx && txDate.getFullYear() === currentYear) {
+        if (monthIdx === currentMonthIdx && year === currentYear) {
           currentMonthExpense += amount;
         }
         categoryMap[tx.category] = (categoryMap[tx.category] || 0) + amount;
       }
 
       // Map to Month
-      const mName = monthLabels[txDate.getMonth()];
+      const mName = monthLabels[monthIdx];
       if (mName && monthMap[mName]) {
         if (tx.type === 'INCOME') monthMap[mName].income += amount;
         else monthMap[mName].expense += amount;
@@ -114,7 +120,7 @@ export class DashboardService {
       }
 
       // Map to Year
-      const yName = txDate.getFullYear().toString();
+      const yName = year.toString();
       if (yearMap[yName]) {
         if (tx.type === 'INCOME') yearMap[yName].income += amount;
         else yearMap[yName].expense += amount;
@@ -144,8 +150,8 @@ export class DashboardService {
         })
       : [];
 
-    // Format trends
-    const mesPoints: TrendPoint[] = monthLabels.slice(0, 8).map(m => ({
+    // Format trends for ALL 12 months
+    const mesPoints: TrendPoint[] = monthLabels.map(m => ({
       label: m,
       income: monthMap[m].income,
       expense: monthMap[m].expense
@@ -164,7 +170,7 @@ export class DashboardService {
     }));
 
     // Recent Transactions
-    const transaccionesRecientes = transactions.slice(0, 10).map((tx) => ({
+    const transaccionesRecientes = transactions.map((tx) => ({
       id: tx.id,
       title: tx.title,
       merchant: tx.merchant || 'Comercio Registrado',
@@ -197,5 +203,58 @@ export class DashboardService {
         alertType: a.alert_type
       }))
     };
+  }
+
+  async createIncome(userId: number, data: {
+    title: string;
+    merchant?: string;
+    category: string;
+    amount: number;
+    date?: string;
+  }) {
+    if (!data.title || !data.category || !data.amount || data.amount <= 0) {
+      throw new Error('Datos de ingreso inválidos. El monto debe ser positivo y se requiere un concepto.');
+    }
+
+    return await this.repo.createTransaction(userId, {
+      type: 'INCOME',
+      title: data.title,
+      merchant: data.merchant || 'Depósito Registrado',
+      category: data.category,
+      amount: data.amount,
+      status: 'COMPLETED',
+      date: data.date || null
+    });
+  }
+
+  async updateTransaction(userId: number, id: number, data: {
+    title?: string;
+    merchant?: string;
+    category?: string;
+    amount?: number;
+    date?: string;
+  }) {
+    if (!id || !userId) {
+      throw new Error('ID de transacción o usuario inválido.');
+    }
+    if (data.amount !== undefined && data.amount <= 0) {
+      throw new Error('El monto debe ser positivo y mayor a 0.');
+    }
+    const updated = await this.repo.updateTransactionById(id, userId, data);
+    if (!updated) {
+      throw new Error('No se encontró la transacción o no tienes permisos para editarla.');
+    }
+    return updated;
+  }
+
+  async deleteTransaction(id: number, userId: number): Promise<boolean> {
+    if (!id || !userId) {
+      throw new Error('ID de transacción o usuario inválido.');
+    }
+    const success = await this.repo.deleteTransactionById(id, userId);
+    if (!success) {
+      throw new Error('No se encontró la transacción o no tienes permisos para eliminarla.');
+    }
+    return true;
   }
 }
